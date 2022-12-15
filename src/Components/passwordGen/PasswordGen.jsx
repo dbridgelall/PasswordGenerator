@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from "axios"
 
 const PasswordGen = () => {
@@ -28,20 +28,26 @@ const client = axios.create({
   baseURL: "https://random-word-api.herokuapp.com/"
 })
 
+const fetchRandomWord = () => {
+    client.get(`word?length=${letterAmount}`)
+    .then((response)=>{
+      let data = response.data[0]
+      let upperCased = data.charAt(0).toUpperCase() + data.slice(1)
+      setWord(upperCased)
+    })
+}
 
-let handleSubmit = async (e) => {
+useEffect(() => {
+  fetchRandomWord();
+}, [])
+
+
+let handleSubmit = (e) => {
   e.preventDefault()
-try {
-  const response = await client.get(`word?length=${letterAmount}`)
-  let data = response.data[0]
-  let upperCased = data.charAt(0).toUpperCase() + data.slice(1)
-  setWord(upperCased)
+  fetchRandomWord()
   setNumber(getNum(numberAmount))
   setSymbol(getMultipleRandom(symbols, symbolAmount));
   setPassword(`${word}${number}${symbol}`)
-} catch (error) {
-  console.log(error)
-} 
 }
 
   return (
@@ -67,7 +73,7 @@ try {
         <button type="submit">Generate</button>
       </form>
       </div>
-      {password && <h1>{password}</h1>}
+      {password && <h1>{password}</h1> }
     </div>
     </>
   )
