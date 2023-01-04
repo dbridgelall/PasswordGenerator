@@ -1,6 +1,7 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from "axios"
+import './passwordGen.scss'
 
 const PasswordGen = () => {
 const [letterAmount, setLetterAmount] = useState("")
@@ -14,14 +15,16 @@ const [symbol, setSymbol] = useState("")
 
 const symbols = [ '~', '!', '@', '#', '$', '%', '^', '&', '*', '-', '+', '=', '?']
 
-function getNum(numberAmount) {
-  let result = Math.floor(Math.random() * (10 ** numberAmount))
-  return result
+const getNum = () => {
+   let result = Math.random().toFixed(numberAmount).split('.')[1];
+  setNumber(result)
 }
-function getMultipleRandom(symbols, symbolAmount) {
+
+const getMultipleRandom = () => {
   const shuffled = [...symbols].sort(() => .5 - Math.random());
   let symbolResults = (shuffled.slice(0, symbolAmount));
-  return symbolResults.join('');
+  let result = symbolResults.join('')
+  setSymbol(result);
 }
 
 const client = axios.create({
@@ -29,25 +32,31 @@ const client = axios.create({
 })
 
 const fetchRandomWord = () => {
-    client.get(`word?length=${letterAmount}`)
-    .then((response)=>{
-      let data = response.data[0]
-      let upperCased = data.charAt(0).toUpperCase() + data.slice(1)
-      setWord(upperCased)
-    })
-}
+  client.get('word', {
+        params: {
+          length: letterAmount,
+        },
+      }).then((response)=>{
+        return (response.data[0])
+      })
+        .then((data)=> {
+        return (data.charAt(0).toUpperCase() + data.slice(1))
+      })
+      .then((capitalWord)=>{
+        setWord(capitalWord)
+      })
+    };
 
-useEffect(() => {
-  fetchRandomWord();
-}, [])
+    const putItTogether = () => {
+      setPassword(`${word}${number}${symbol}`)
+    }
 
-
-let handleSubmit = (e) => {
+const handleSubmit = (e) => {
   e.preventDefault()
   fetchRandomWord()
-  setNumber(getNum(numberAmount))
-  setSymbol(getMultipleRandom(symbols, symbolAmount));
-  setPassword(`${word}${number}${symbol}`)
+  getNum()
+  getMultipleRandom()
+  putItTogether()
 }
 
   return (
@@ -60,21 +69,19 @@ let handleSubmit = (e) => {
       <div className="instructions">
         <h1>Instructions</h1>
       <h3>Input in the following filters to help fit the password creation guidelines needed</h3>
-      </div>
-    <div className="passwordGen">
       <div className="passwordForm">
       <form onSubmit={handleSubmit}>
         <label>Amount of letter chracters for word:</label>
-        <input type="number" value={letterAmount} onChange={(e) => setLetterAmount(e.target.value)}min={0} max={8} required/>
+        <input type="number" value={letterAmount} onChange={(e) => setLetterAmount(e.target.value)} min={0} max={8} required/>
         <label>Amount of Numeric characters:</label>
-        <input type="number" value={numberAmount} onChange={(e) => setNumberAmount(e.target.value)}min={0} max={9} required/>
+        <input type="number" value={numberAmount} onChange={(e) => setNumberAmount(e.target.value)} min={0} max={9} required/>
         <label>Amount of special characters</label>
         <input type="number" value={symbolAmount} onChange={(e) => setSymbolAmount(e.target.value)} min={0} max={5} required></input>
         <button type="submit">Generate</button>
       </form>
       </div>
-      {password && <h1>{password}</h1> }
-    </div>
+      </div>
+      <h1>{password}</h1>
     </>
   )
 }
